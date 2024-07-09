@@ -21,7 +21,6 @@ Dim tickerIncrease As String
 Dim tickerDecrease As String
 Dim tickerVolume As String
 
-' Assuming your ticker data is in column A of the active sheet
 For Each ws In ThisWorkbook.Worksheets
     Set tickerColumn = ws.Range("A2:A" & ws.Cells(ws.Rows.Count, 1).End(xlUp).Row)
     ws.Range("L1").Value = "Ticker Symbol"
@@ -34,7 +33,6 @@ For Each ws In ThisWorkbook.Worksheets
     ws.Range("S1").Value = "Ticker"
     ws.Range("T1").Value = "Value"
     
-    ' Loop through each cell in the ticker column
     For Each tickerCell In tickerColumn
         If Not UniqueTickers.Exists(tickerCell.Value) Then
             UniqueTickers.Add tickerCell.Value, 1
@@ -55,16 +53,16 @@ For Each ws In ThisWorkbook.Worksheets
             If tickerCell.Value = tickerKey Then
                 totalVolume = totalVolume + tickerCell.Offset(0, 6).Value
                 If firstValue = 0 Then
-                    firstValue = tickerCell.Offset(0, 2).Value ' Assuming first value is in column C
+                    firstValue = tickerCell.Offset(0, 2).Value 
                 End If
-                lastValue = tickerCell.Offset(0, 5).Value ' Assuming last value is in column F
+                lastValue = tickerCell.Offset(0, 5).Value 
             End If
         Next tickerCell
         percentageChange = (lastValue - firstValue) / firstValue
-        ws.Cells(i + 1, "O").Value = totalVolume ' Print total volume in column O
-        ws.Cells(i + 1, "M").Value = lastValue - firstValue ' Column M (13th column)
-        ws.Cells(i + 1, "N").Value = percentageChange ' Print percentage in column N
-        ws.Range("N:N").NumberFormat = "0.00%" ' Format column N as percentages
+        ws.Cells(i + 1, "O").Value = totalVolume 
+        ws.Cells(i + 1, "M").Value = lastValue - firstValue 
+        ws.Cells(i + 1, "N").Value = percentageChange 
+        ws.Range("N:N").NumberFormat = "0.00%" 
     i = i + 1
     Next tickerKey
     
