@@ -1,0 +1,108 @@
+Sub stock_analysis()
+
+Dim ws As Worksheet
+Dim lastRow As Long
+Dim tickerColumn As Range
+Dim tickerCell As Range
+Dim UniqueTickers As Object
+Set UniqueTickers = CreateObject("Scripting.Dictionary")
+Dim i As Long
+Dim totalVolume As Double
+Dim tickerKey As Variant
+Dim j As Long
+Dim firstValue As Double
+Dim lastValue As Double
+Dim rng As Range
+Dim formatRange As FormatCondition
+Dim greatestIncrease As Double
+Dim greatestDecrease As Double
+Dim greatestVolume As Double
+Dim tickerIncrease As String
+Dim tickerDecrease As String
+Dim tickerVolume As String
+
+' Assuming your ticker data is in column A of the active sheet
+For Each ws In ThisWorkbook.Worksheets
+    Set tickerColumn = ws.Range("A2:A" & ws.Cells(ws.Rows.Count, 1).End(xlUp).Row)
+    ws.Range("L1").Value = "Ticker Symbol"
+    ws.Range("O1").Value = "Total Stock Volume"
+    ws.Range("M1").Value = "$Quarterly Change"
+    ws.Range("N1").Value = "%Percentage Change"
+    ws.Range("R2").Value = "Greatest % Increase"
+    ws.Range("R3").Value = "Greatest % Decrease"
+    ws.Range("R4").Value = "Greatest Total Volume"
+    ws.Range("S1").Value = "Ticker"
+    ws.Range("T1").Value = "Value"
+    
+    ' Loop through each cell in the ticker column
+    For Each tickerCell In tickerColumn
+        If Not UniqueTickers.Exists(tickerCell.Value) Then
+            UniqueTickers.Add tickerCell.Value, 1
+        End If
+    Next tickerCell
+
+    i = 1
+    For Each tickerKey In UniqueTickers.keys()
+        ws.Cells(i + 1, "L").Value = tickerKey
+        totalVolume = 0 ' Reset total volume for each ticker
+        firstValue = 0 ' Initialize firstValue
+        lastValue = 0 ' Initialize lastValue
+        greatestIncrease = -1
+        greatestDecrease = 1
+        greatestVolume = 0
+        lastRow = ws.Cells(ws.Rows.Count, "L").End(xlUp).Row
+        For Each tickerCell In tickerColumn
+            If tickerCell.Value = tickerKey Then
+                totalVolume = totalVolume + tickerCell.Offset(0, 6).Value
+                If firstValue = 0 Then
+                    firstValue = tickerCell.Offset(0, 2).Value ' Assuming first value is in column C
+                End If
+                lastValue = tickerCell.Offset(0, 5).Value ' Assuming last value is in column F
+            End If
+        Next tickerCell
+        percentageChange = (lastValue - firstValue) / firstValue
+        ws.Cells(i + 1, "O").Value = totalVolume ' Print total volume in column O
+        ws.Cells(i + 1, "M").Value = lastValue - firstValue ' Column M (13th column)
+        ws.Cells(i + 1, "N").Value = percentageChange ' Print percentage in column N
+        ws.Range("N:N").NumberFormat = "0.00%" ' Format column N as percentages
+    i = i + 1
+    Next tickerKey
+    
+    Set rng = ws.Range("M2:M" & ws.Cells(ws.Rows.Count, "M").End(xlUp).Row)
+    Set formatRange = rng.FormatConditions.Add(Type:=xlCellValue, Operator:=xlGreater, Formula1:="0")
+    formatRange.Interior.Color = RGB(0, 255, 0)
+    Set formatRange = rng.FormatConditions.Add(Type:=xlCellValue, Operator:=xlLess, Formula1:="0")
+    formatRange.Interior.Color = RGB(255, 0, 0)
+    
+    For i = 2 To lastRow
+        ' Percent increase
+        If ws.Cells(i, "N").Value > greatestIncrease Then
+            greatestIncrease = ws.Cells(i, "N").Value
+            tickerIncrease = ws.Cells(i, "L").Value
+        End If
+        
+        ' Percent decrease
+        If ws.Cells(i, "N").Value < greatestDecrease Then
+            greatestDecrease = ws.Cells(i, "N").Value
+            tickerDecrease = ws.Cells(i, "L").Value
+        End If
+        
+        ' Total volume
+        If ws.Cells(i, "O").Value > greatestVolume Then
+            greatestVolume = ws.Cells(i, "O").Value
+            tickerVolume = ws.Cells(i, "L").Value
+        End If
+    Next i
+
+    
+    ' Output results
+    ws.Range("S2").Value = tickerIncrease
+    ws.Range("T2").Value = greatestIncrease
+    ws.Range("S3").Value = tickerDecrease
+    ws.Range("T3").Value = greatestDecrease
+    ws.Range("S4").Value = tickerVolume
+    ws.Range("T4").Value = greatestVolume
+    
+Next ws
+End Sub
+
